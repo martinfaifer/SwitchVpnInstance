@@ -13,7 +13,7 @@ class HpService
         public string $ip,
         public string $username,
         public string $password,
-        public ?string $superPassword = null
+        public string $superPassword = "none"
     ) {
         $this->ssh = new SSH2($this->ip);
     }
@@ -25,10 +25,10 @@ class HpService
         }
     }
 
-    public function getRoutingTable(?string $vpnInstance = null, ?string $isbgp = null)
+    public function getRoutingTable(string $vpnInstance, string $isbgp)
     {
         $this->connect();
-        if (!is_null($this->superPassword)) {
+        if ($this->superPassword != "none") {
             $this->ssh->write('super' . "\n");
             $this->ssh->write($this->superPassword . "\n");
             $this->ssh->read();
@@ -36,12 +36,17 @@ class HpService
         $this->ssh->write('screen-length disable' . "\n");
         $this->ssh->read();
 
-        if(!is_null($isbgp) && !is_null($vpnInstance)) {
-            return $this->getVpnBgpRoutes(vpnInstance: $vpnInstance);
+        if ($isbgp != "none") {
+
+            if ($vpnInstance != "default") {
+                return $this->getVpnBgpRoutes(vpnInstance: $vpnInstance);
+            }
+
+            return $this->getBgpRoutes();
         }
 
         return match ($vpnInstance) {
-            null => $this->getRoutes(),
+            "default" => $this->getRoutes(),
             default => $this->getVpnRoutes($vpnInstance),
         };
     }
@@ -55,6 +60,12 @@ class HpService
     protected function getVpnRoutes(string $vpnInstance)
     {
         $this->ssh->write('disp ip routing-table vpn-instance ' . $vpnInstance . "\n");
+        return $this->ssh->read();
+    }
+
+    protected function getBgpRoutes()
+    {
+        $this->ssh->write('disp bgp routing-table ipv4 '. "\n");
         return $this->ssh->read();
     }
 

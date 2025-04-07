@@ -12,7 +12,7 @@ class GetSwitchVpnInstanceCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'get-vpn-instance {switchIp} {username} {password} {superPassword?} {vpnInstance?} {isbgp?}';
+    protected $signature = 'get-vpn-instance {switchIp} {username} {password} {superPassword=none} {vpnInstance=default} {isbgp=none}';
 
     /**
      * The console command description.
@@ -33,6 +33,6 @@ class GetSwitchVpnInstanceCommand extends Command
             superPassword: $this->argument('superPassword')
         ));
 
-        print_r($connectService->getRoutingTable(vpnInstance:$this->argument('vpnInstance')));
+        print_r($connectService->getRoutingTable(vpnInstance:$this->argument('vpnInstance') , isbgp: $this->argument('isbgp')));
     }
 }
